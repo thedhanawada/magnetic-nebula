@@ -5,9 +5,9 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 var particlesArray = [];
-var particleCount = 150; // Decreased particle count for performance reasons
+var particleCount = 200; // Adjust particle count based on performance
 var maxParticleSize = 5;
-var minDistance = 100; // Min distance to draw a line between particles
+var minDistance = 100;
 
 var mouse = {
   x: null,
@@ -19,21 +19,42 @@ window.addEventListener("mousemove", function (event) {
   mouse.y = event.y;
 });
 
+canvas.addEventListener("mouseout", function () {
+  mouse.x = null;
+  mouse.y = null;
+});
+
+canvas.addEventListener("click", function () {
+  for (var i = 0; i < particlesArray.length; i++) {
+    if (mouse.x && mouse.y) {
+      var dx = particlesArray[i].x - mouse.x;
+      var dy = particlesArray[i].y - mouse.y;
+
+      particlesArray[i].speedX = dx / 20;
+      particlesArray[i].speedY = dy / 20;
+    }
+  }
+});
+
 class Particle {
   constructor() {
     this.x = Math.random() * canvas.width;
     this.y = Math.random() * canvas.height;
-    this.size = Math.random() * maxParticleSize;
+    this.size = Math.random() * 5 + 1;
     this.speedX = Math.random() * 3 - 1.5;
     this.speedY = Math.random() * 3 - 1.5;
-    this.color = 'white';
+    this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
   }
 
   update() {
     this.x += this.speedX;
     this.y += this.speedY;
 
-    if (this.size > 0.2) this.size -= 0.1;
+    if (this.size > maxParticleSize) {
+      this.size = 1;
+    } else {
+      this.size += 0.01;  // Adjust particle growth rate based on preference
+    }
   }
 
   draw() {
@@ -70,17 +91,14 @@ function animateParticles() {
       var dy = particlesArray[i].y - mouse.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
 
-      // The particles are attracted to the mouse instead of being repelled
       if (dist < 200) {
         particlesArray[i].x -= dx / 20;
         particlesArray[i].y -= dy / 20;
       }
 
-      // Particles change color as they approach the mouse
       particlesArray[i].color = `hsl(${dist / 2}, 100%, 50%)`;
     }
 
-    // Inter-particle lines
     for (var j = i; j < particlesArray.length; j++) {
       var dx = particlesArray[i].x - particlesArray[j].x;
       var dy = particlesArray[i].y - particlesArray[j].y;
@@ -98,7 +116,6 @@ function animateParticles() {
     }
 
     if (
-      particlesArray[i].size <= 0.2 ||
       particlesArray[i].x < 0 ||
       particlesArray[i].x > canvas.width ||
       particlesArray[i].y < 0 ||
